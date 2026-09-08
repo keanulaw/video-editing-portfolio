@@ -69,6 +69,24 @@ function App() {
       videoId: 'n-OAW9e92Sw',
       thumbnail: 'https://img.youtube.com/vi/n-OAW9e92Sw/maxresdefault.jpg',
       description: 'Dynamic gaming video with commentary and editing'
+    },
+    {
+      id: '6',
+      title: 'New Project 1',
+      category: 'Short Form',
+      type: 'drive',
+      videoId: '14cdbqfqleEVvzklJszjq7cEJsYtHKTnv',
+      thumbnail: 'https://placehold.co/800x450/111827/f59e0b?text=New+Project+1',
+      description: 'Add a description for this project'
+    },
+    {
+      id: '7',
+      title: 'New Project 2',
+      category: 'Long Form',
+      type: 'drive',
+      videoId: '1V5FiJ0zjH20OIRpA7NmzqZRfeM7V0aMG',
+      thumbnail: 'https://placehold.co/800x450/111827/f59e0b?text=New+Project+2',
+      description: 'Add a description for this project'
     }
   ];
 
