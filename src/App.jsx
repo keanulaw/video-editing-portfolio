@@ -1,451 +1,459 @@
-import { useState, useEffect } from 'react';
-import './App.css';
+import { useEffect, useRef, useState } from "react";
+import { projects, colorGrades, intro, skills } from "./data/content";
+import { useSequence } from "./hooks/useSequence";
+import ProjectImage from "./components/ProjectImage";
+import VideoPlayer from "./components/VideoPlayer";
+import "./App.css";
 
-function App() {
-  const [scrolled, setScrolled] = useState(false);
+const Arrow = () => (
+  <span className="arrow" aria-hidden="true">
+    ↗
+  </span>
+);
+const Play = () => <span aria-hidden="true">▶</span>;
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Your photo and intro video
-  const profilePhoto = 'https://lh3.googleusercontent.com/d/1LbVOZQuwGlM1yjvE2ZO-9xnFCsNHf211';
-  const introVideo = {
-    id: 'intro',
-    title: 'Meet Shannon - Video Introduction',
-    category: 'Introduction',
-    type: 'drive',
-    videoId: '1a-MQb3a0F5JhaVJtQ0q2bmD5Btu7cMWJ',
-    thumbnail: profilePhoto,
-    description: 'A personal introduction to my work and creative process'
-  };
-
-  const projects = [
-    {
-      id: '1',
-      title: 'Serious Short',
-      category: 'Short Form',
-      type: 'drive',
-      videoId: '1h3w_7NTVTj9UMzs94Cj7qAj4f61yzHk4',
-      thumbnail: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&q=80',
-      description: 'Impactful short-form content with serious tone'
-    },
-    {
-      id: '2',
-      title: 'Comedy Short',
-      category: 'Short Form',
-      type: 'drive',
-      videoId: '1ab_mV0eU5DUSAK9XUVfp-BBZtEgatxar',
-      thumbnail: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=800&q=80',
-      description: 'Entertaining short-form content with comedic elements'
-    },
-    {
-      id: '3',
-      title: 'Voice Over B-Roll',
-      category: 'Long Form',
-      type: 'drive',
-      videoId: '1tfFOu3tqEaMO0Euchu6n-WXOT1fNfg2Q',
-      thumbnail: 'https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?w=800&q=80',
-      description: 'Professional voice-over narration with cinematic B-roll footage'
-    },
-    {
-      id: '4',
-      title: 'Talking Head Video',
-      category: 'Long Form',
-      type: 'youtube',
-      videoId: 'HeIcNepnqXY',
-      thumbnail: 'https://img.youtube.com/vi/HeIcNepnqXY/maxresdefault.jpg',
-      description: 'Engaging long-form content with on-camera presentation'
-    },
-    {
-      id: '5',
-      title: 'Gaming Content',
-      category: 'Long Form',
-      type: 'youtube',
-      videoId: 'n-OAW9e92Sw',
-      thumbnail: 'https://img.youtube.com/vi/n-OAW9e92Sw/maxresdefault.jpg',
-      description: 'Dynamic gaming video with commentary and editing'
-    },
-    {
-      id: '6',
-      title: 'New Project 1',
-      category: 'Short Form',
-      type: 'drive',
-      videoId: '14cdbqfqleEVvzklJszjq7cEJsYtHKTnv',
-      thumbnail: 'https://placehold.co/800x450/111827/f59e0b?text=New+Project+1',
-      description: 'Add a description for this project'
-    },
-    {
-      id: '7',
-      title: 'New Project 2',
-      category: 'Long Form',
-      type: 'drive',
-      videoId: '1V5FiJ0zjH20OIRpA7NmzqZRfeM7V0aMG',
-      thumbnail: 'https://placehold.co/800x450/111827/f59e0b?text=New+Project+2',
-      description: 'Add a description for this project'
-    }
-  ];
-
-  const [selectedVideo, setSelectedVideo] = useState(null);
-
-  const skills = [
-    'DaVinci Resolve',
-    'Color Grading',
-    'Motion Graphics',
-    'Sound Design',
-    'Video Compression'
-  ];
-
+function WorkFrame({ project, onPlay, className = "" }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white overflow-hidden">
-      {/* Cinematic background effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(17,24,39,0.8),rgba(0,0,0,1))]"></div>
-        <div className="film-grain"></div>
-        <div className="vignette"></div>
+    <article className={`work-frame ${className}`} data-reveal="frame">
+      <button
+        className="video-trigger"
+        onClick={() => onPlay(project)}
+        aria-label={`Watch ${project.title}`}
+      >
+        <ProjectImage project={project} />
+        <span className="frame-corners" aria-hidden="true" />
+        <span className="frame-number">CUT / 0{project.id}</span>
+        <span className="play-disc">
+          <Play />
+          <span>PLAY</span>
+        </span>
+        <span className="frame-bottom">
+          <span>{project.category}</span>
+          <span>WATCH THE CUT ↗</span>
+        </span>
+      </button>
+      <div className="work-caption">
+        <h3>{project.title}</h3>
+        <p>{project.description}</p>
       </div>
-
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/5' : ''
-      }`}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2 animate-fade-in">
-            <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-red-600 rounded flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm12.553 1.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold tracking-tight">Shannon</span>
-          </div>
-          <div className="hidden md:flex items-center space-x-8">
-            <a href="#work" className="hover:text-amber-500 transition-colors duration-300">Work</a>
-            <a href="#about" className="hover:text-amber-500 transition-colors duration-300">About</a>
-            <a href="#contact" className="hover:text-amber-500 transition-colors duration-300">Contact</a>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-6 pt-20">
-        <div className="max-w-6xl mx-auto text-center z-10">
-          <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            <div className="inline-block mb-4 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full">
-              <span className="text-amber-500 text-sm font-medium tracking-wider">VIDEO EDITOR & STORYTELLER</span>
-            </div>
-          </div>
-          
-          <h1 className="text-6xl md:text-8xl font-black mb-6 animate-slide-up leading-tight" style={{ animationDelay: '0.2s' }}>
-            Crafting Stories
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-red-600">
-              Frame by Frame
-            </span>
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto animate-slide-up leading-relaxed" style={{ animationDelay: '0.3s' }}>
-            Transforming raw footage into compelling narratives that captivate, inspire, and leave lasting impressions.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '0.4s' }}>
-            <a 
-              href="#work" 
-              className="px-8 py-4 bg-gradient-to-r from-amber-500 to-red-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-amber-500/50 transition-all duration-300 hover:scale-105"
-            >
-              View My Work
-            </a>
-            <a 
-              href="#contact" 
-              className="px-8 py-4 border-2 border-white/20 rounded-full font-semibold hover:bg-white/5 transition-all duration-300"
-            >
-              Get In Touch
-            </a>
-          </div>
-        </div>
-
-        {/* Decorative film strips */}
-        <div className="absolute top-0 left-0 w-full h-20 film-strip opacity-20"></div>
-        <div className="absolute bottom-0 left-0 w-full h-20 film-strip opacity-20"></div>
-      </section>
-
-      {/* Video Introduction Section */}
-      <section className="relative py-20 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-black mb-4">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-600">
-                Hello I'm Shannon
-              </span>
-            </h2>
-            <p className="text-lg text-gray-400">
-              Watch my introduction to learn more about my journey and approach to video editing
-            </p>
-          </div>
-
-          <div 
-            className="group relative bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl overflow-hidden border border-white/5 hover:border-amber-500/50 transition-all duration-500 cursor-pointer max-w-3xl mx-auto"
-            onClick={() => setSelectedVideo(introVideo)}
-          >
-            <div className="aspect-video relative overflow-hidden">
-              <img 
-                src={introVideo.thumbnail} 
-                alt={introVideo.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300"></div>
-              
-              {/* Play button overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 rounded-full bg-amber-500/20 backdrop-blur-sm border-2 border-amber-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-amber-500/30 transition-all duration-300">
-                  <svg className="w-10 h-10 text-amber-500 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* "Introduction" badge */}
-              <div className="absolute top-4 left-4 px-4 py-2 bg-amber-500/90 backdrop-blur-sm rounded-full">
-                <span className="text-white text-xs font-bold tracking-wider uppercase">
-                  📹 Video Introduction
-                </span>
-              </div>
-            </div>
-
-            <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 group-hover:text-amber-500 transition-colors duration-300">
-                {introVideo.title}
-              </h3>
-              <p className="text-gray-400">
-                {introVideo.description}
-              </p>
-            </div>
-
-            {/* Decorative corner accent */}
-            <div className="absolute top-4 right-4 w-12 h-12 border-t-2 border-r-2 border-amber-500/0 group-hover:border-amber-500/50 transition-all duration-300"></div>
-          </div>
-        </div>
-      </section>
-
-      {/* Portfolio Grid */}
-      <section id="work" className="relative py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-black mb-6">
-              Featured <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-600">Projects</span>
-            </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              A showcase of my recent work across various genres and formats
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {projects.map((project, index) => (
-              <div 
-                key={project.id}
-                className="group relative bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl overflow-hidden border border-white/5 hover:border-amber-500/50 transition-all duration-500 cursor-pointer animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-                onClick={() => setSelectedVideo(project)}
-              >
-                <div className="aspect-video relative overflow-hidden">
-                  <img 
-                    src={project.thumbnail} 
-                    alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300"></div>
-                  
-                  {/* Play button overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-amber-500/20 backdrop-blur-sm border-2 border-amber-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-amber-500/30 transition-all duration-300">
-                      <svg className="w-8 h-8 text-amber-500 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <div className="mb-2">
-                    <span className="text-xs font-semibold text-amber-500 tracking-wider uppercase">
-                      {project.category}
-                    </span>
-                  </div>
-                  <h3 className="text-2xl font-bold mb-2 group-hover:text-amber-500 transition-colors duration-300">
-                    {project.title}
-                  </h3>
-                  <p className="text-gray-400">
-                    {project.description}
-                  </p>
-                </div>
-
-                {/* Decorative corner accent */}
-                <div className="absolute top-4 right-4 w-12 h-12 border-t-2 border-r-2 border-amber-500/0 group-hover:border-amber-500/50 transition-all duration-300"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* About Section */}
-      <section id="about" className="relative py-32 px-6 bg-gradient-to-br from-gray-950 to-black">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Profile Photo */}
-            <div className="order-2 lg:order-1">
-              <div className="relative">
-                <div className="aspect-square rounded-2xl overflow-hidden border-4 border-amber-500/20 shadow-2xl shadow-amber-500/20">
-                  <img 
-                    src={profilePhoto} 
-                    alt="Shannon - Video Editor"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                {/* Decorative elements */}
-                <div className="absolute -top-4 -left-4 w-24 h-24 border-t-4 border-l-4 border-amber-500/30 rounded-tl-2xl"></div>
-                <div className="absolute -bottom-4 -right-4 w-24 h-24 border-b-4 border-r-4 border-amber-500/30 rounded-br-2xl"></div>
-              </div>
-            </div>
-
-            {/* Bio Text */}
-            <div className="order-1 lg:order-2">
-              <h2 className="text-5xl md:text-6xl font-black mb-6">
-                About <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-600">Me</span>
-              </h2>
-              <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
-                <p>
-                  I'm a passionate video editor with a keen eye for storytelling and visual aesthetics. With years of experience crafting compelling narratives, I specialize in transforming raw footage into polished, engaging content.
-                </p>
-                <p>
-                  My approach combines technical expertise with creative vision, ensuring every project resonates with its intended audience. From corporate videos to creative content, I bring dedication and artistry to every frame.
-                </p>
-                <p>
-                  I believe great editing is invisible—it serves the story without drawing attention to itself. Let's collaborate to bring your vision to life.
-                </p>
-              </div>
-
-              {/* Skills Section moved here */}
-              <div className="mt-12">
-                <h3 className="text-3xl font-bold mb-8">Skills & Tools</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {skills.map((skill, index) => (
-                    <div 
-                      key={index}
-                      className="px-6 py-4 bg-gradient-to-br from-gray-900 to-gray-950 border border-white/10 rounded-xl hover:border-amber-500/50 transition-all duration-300 text-center font-medium"
-                    >
-                      {skill}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section id="contact" className="relative py-32 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl md:text-6xl font-black mb-6">
-            Let's Create Something
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-600">
-              Amazing Together
-            </span>
-          </h2>
-          <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
-            Ready to bring your project to life? Get in touch and let's discuss how we can collaborate.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <a 
-              href="mailto:your.email@example.com"
-              className="px-8 py-4 bg-gradient-to-r from-amber-500 to-red-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-amber-500/50 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-              </svg>
-              Email Me
-            </a>
-            <a 
-              href="https://linkedin.com/in/yourprofile"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-4 border-2 border-white/20 rounded-full font-semibold hover:bg-white/5 transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.298v15.403C1 18.418 1.595 19 2.328 19h15.34c.734 0 1.332-.582 1.332-1.299V2.298C19 1.581 18.402 1 17.668 1z" clipRule="evenodd" />
-              </svg>
-              LinkedIn
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="relative py-12 px-6 border-t border-white/5">
-        <div className="max-w-7xl mx-auto text-center text-gray-500">
-          <p>&copy; 2024 Your Name. All rights reserved.</p>
-        </div>
-      </footer>
-
-      {/* Video Modal */}
-      {selectedVideo && (
-        <div 
-          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-6 animate-fade-in"
-          onClick={() => setSelectedVideo(null)}
-        >
-          <div 
-            className="max-w-6xl w-full relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setSelectedVideo(null)}
-              className="absolute -top-12 right-0 text-white hover:text-amber-500 transition-colors duration-300"
-            >
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            
-            <div className="bg-gray-900 rounded-2xl overflow-hidden border border-white/10">
-              <div className="aspect-video">
-                {selectedVideo.type === 'drive' ? (
-                  <iframe
-                    src={`https://drive.google.com/file/d/${selectedVideo.videoId}/preview`}
-                    className="w-full h-full"
-                    allow="autoplay"
-                    title={selectedVideo.title}
-                  ></iframe>
-                ) : (
-                  <iframe
-                    src={`https://www.youtube.com/embed/${selectedVideo.videoId}`}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    title={selectedVideo.title}
-                  ></iframe>
-                )}
-              </div>
-              <div className="p-8">
-                <div className="mb-2">
-                  <span className="text-sm font-semibold text-amber-500 tracking-wider uppercase">
-                    {selectedVideo.category}
-                  </span>
-                </div>
-                <h3 className="text-3xl font-bold mb-4">{selectedVideo.title}</h3>
-                <p className="text-gray-400 text-lg">{selectedVideo.description}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </article>
   );
 }
 
-export default App;
+export default function App() {
+  const [video, setVideo] = useState(null);
+  const videoTrigger = useRef(null);
+  const openVideo = (project) => {
+    videoTrigger.current = document.activeElement;
+    setVideo(project);
+  };
+  const closeVideo = () => {
+    setVideo(null);
+    requestAnimationFrame(() => videoTrigger.current?.focus());
+  };
+  const [menu, setMenu] = useState(false);
+  const [motion, setMotion] = useState(
+    () => !matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  const [active, setActive] = useState("home");
+  useSequence(motion);
+  useEffect(() => {
+    const query = matchMedia("(prefers-reduced-motion: reduce)");
+    const change = () => setMotion(!query.matches);
+    query.addEventListener("change", change);
+    return () => query.removeEventListener("change", change);
+  }, []);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActive(entry.target.id);
+        });
+      },
+      { rootMargin: "-15% 0px -65% 0px" },
+    );
+    document
+      .querySelectorAll("main > section[id]")
+      .forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    const escape = (event) => {
+      if (event.key === "Escape") setMenu(false);
+    };
+    addEventListener("keydown", escape);
+    return () => removeEventListener("keydown", escape);
+  }, []);
+  return (
+    <div className={`site ${motion ? "motion-on" : "motion-off"}`}>
+      <a className="skip-link" href="#work">
+        Skip to the work
+      </a>
+      <header className="navigation">
+        <a href="#home" className="wordmark" aria-label="Shannon, home">
+          SHANNON
+          <span className="logo-play">
+            <Play />
+          </span>
+        </a>
+        <span className="nav-label">INDEPENDENT VIDEO EDITOR</span>
+        <button
+          className="menu-toggle"
+          aria-expanded={menu}
+          aria-controls="main-nav"
+          onClick={() => setMenu(!menu)}
+        >
+          {menu ? "Close −" : "Menu +"}
+        </button>
+        <nav
+          id="main-nav"
+          aria-label="Main navigation"
+          className={menu ? "is-open" : ""}
+        >
+          {["work", "about", "toolkit", "contact"].map((item) => (
+            <a
+              key={item}
+              href={`#${item}`}
+              aria-current={active === item ? "location" : undefined}
+              onClick={() => setMenu(false)}
+            >
+              {item}
+              <span aria-hidden="true">↗</span>
+            </a>
+          ))}
+        </nav>
+        <div className="reading-progress" aria-hidden="true" />
+      </header>
+      <main>
+        <section id="home" className="hero">
+          <div className="hero-top eyebrow">
+            <span>SHORT FORM / LONG FORM / MOTION GRAPHICS</span>
+            <span>PORTFOLIO — PRESS PLAY</span>
+          </div>
+          <h1>
+            <span className="hero-name">
+              SHANNON
+              <span className="asterisk" aria-hidden="true">
+                ✳
+              </span>
+            </span>
+            <span className="hero-role">
+              VIDEO EDITOR<span className="period">.</span>
+            </span>
+          </h1>
+          <div className="hero-lower">
+            <p>
+              The right cut.
+              <br />
+              The right feeling.
+            </p>
+            <a className="round-link" href="#work">
+              <span>
+                Explore
+                <br />
+                the work
+              </span>
+              <span aria-hidden="true">↓</span>
+            </a>
+            <p className="hero-note">
+              From a quick laugh to a longer story.
+              <br />I edit for the moment that matters.
+            </p>
+          </div>
+          <div className="hero-film" aria-label="A few cuts from the portfolio">
+            {[projects[0], projects[2], projects[4]].map((project, index) => (
+              <button
+                key={project.id}
+                onClick={() => openVideo(project)}
+                className={`film-shot shot-${index}`}
+                aria-label={`Watch ${project.title}`}
+              >
+                <ProjectImage project={project} eager width={800} />
+                <span>
+                  <span>
+                    0{index + 1} / {project.title}
+                  </span>
+                  <Play />
+                </span>
+              </button>
+            ))}
+            <span className="film-label eyebrow">
+              A FEW FRAMES.
+              <br />A LOT OF POSSIBILITIES.
+            </span>
+          </div>
+          <div className="hero-footer eyebrow">
+            <span>
+              <span className="red-dot" /> EDIT. REFINE. REPEAT.
+            </span>
+            <span>SCROLL TO START THE SEQUENCE ↓</span>
+            <span>01 — 05</span>
+          </div>
+        </section>
+        <section id="work" className="work-section">
+          <div className="section-top eyebrow">
+            <span>01 / SELECTED WORK</span>
+            <span>
+              {projects.length + colorGrades.length} CUTS. DIFFERENT MOODS.
+            </span>
+          </div>
+          <div className="section-heading" data-reveal="type">
+            <h2>
+              LESS TALK.
+              <br />
+              <span>MORE PLAY.</span>
+            </h2>
+            <p>
+              Short-form, long-form, and everything
+              <br className="desktop-break" /> that makes the edit click.
+            </p>
+          </div>
+          <WorkFrame
+            project={projects[2]}
+            onPlay={openVideo}
+            className="featured-frame"
+          />
+          <div className="shorts-heading" data-reveal="slide">
+            <span className="eyebrow">THE SHORT CUTS</span>
+            <h3>
+              Same format.
+              <br />
+              Different energy.
+            </h3>
+            <span className="giant-arrow" aria-hidden="true">
+              ↘
+            </span>
+          </div>
+          <div className="shorts-pair">
+            <WorkFrame
+              project={projects[0]}
+              onPlay={openVideo}
+              className="portrait-frame"
+            />
+            <WorkFrame
+              project={projects[1]}
+              onPlay={openVideo}
+              className="portrait-frame offset-frame"
+            />
+          </div>
+          <div className="longs-heading eyebrow">
+            <span>LET IT PLAY A LITTLE LONGER</span>
+            <span>LONG FORM ↓</span>
+          </div>
+          <div className="longs-pair">
+            <WorkFrame project={projects[3]} onPlay={openVideo} />
+            <WorkFrame
+              project={projects[4]}
+              onPlay={openVideo}
+              className="offset-frame"
+            />
+          </div>
+          <section
+            id="color-grading"
+            className="color-study"
+            aria-labelledby="color-title"
+          >
+            <div className="section-top eyebrow">
+              <span>IN FOCUS / COLOR GRADING</span>
+              <span>TWO FILMS. MY COLOR WORK.</span>
+            </div>
+            <div className="color-heading" data-reveal="type">
+              <h3 id="color-title">
+                A FEEL
+                <br />
+                FOR <em>COLOR.</em>
+              </h3>
+              <p>
+                Two examples of my color grading work.
+                <br />
+                Watch each film to see the finished look.
+              </p>
+            </div>
+            <div className="color-films">
+              {colorGrades.map((project) => (
+                <WorkFrame
+                  key={project.id}
+                  project={project}
+                  onPlay={openVideo}
+                />
+              ))}
+            </div>
+          </section>
+          <div className="more-work">
+            <h3 data-reveal="type">
+              STILL ROLLING<span>↙</span>
+            </h3>
+            {projects.slice(5).map((project) => (
+              <button
+                key={project.id}
+                onClick={() => openVideo(project)}
+                className="project-row"
+                data-reveal="slide"
+              >
+                <span className="eyebrow">0{project.id}</span>
+                <ProjectImage project={project} width={400} />
+                <span className="row-title">
+                  {project.title}
+                  <small>{project.category}</small>
+                </span>
+                <span className="row-watch">
+                  Watch <Arrow />
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+        <section
+          className="motion-section"
+          aria-label="Motion graphics interlude"
+        >
+          <div className="eyebrow">
+            <span>02 / A LITTLE MOTION</span>
+            <span>TYPE. TIMING. RHYTHM.</span>
+          </div>
+          <div className="kinetic-type" data-reveal="kinetic">
+            <span>MAKE</span>
+            <span className="outlined">
+              IT MOVE
+              <span className="motion-star" aria-hidden="true">
+                ✳
+              </span>
+            </span>
+            <span>
+              MAKE IT <em>FEEL.</em>
+            </span>
+          </div>
+          <div className="motion-bottom">
+            <span className="eyebrow">
+              MOTION GRAPHICS / SOUND DESIGN / COLOR
+            </span>
+            <p>
+              Not every frame needs more.
+              <br />
+              Sometimes it just needs the right beat.
+            </p>
+          </div>
+        </section>
+        <section id="about" className="about-section">
+          <div className="section-top eyebrow">
+            <span>03 / BEHIND THE CUT</span>
+            <span>HELLO, I'M SHANNON.</span>
+          </div>
+          <div className="about-layout">
+            <div className="about-visual" data-reveal="frame">
+              <button
+                onClick={() => openVideo(intro)}
+                aria-label="Watch Meet Shannon, video introduction"
+              >
+                <ProjectImage project={intro} />
+                <span className="intro-sticker">
+                  MEET THE
+                  <br />
+                  EDITOR <Arrow />
+                </span>
+                <span className="play-disc">
+                  <Play />
+                </span>
+              </button>
+              <span className="eyebrow">
+                A PERSONAL INTRODUCTION — WATCH WITH SOUND
+              </span>
+            </div>
+            <div className="about-copy" data-reveal="slide">
+              <h2>
+                BEHIND
+                <br />
+                THE
+                <br />
+                <span>TIMELINE.</span>
+              </h2>
+              <p>
+                I'm Shannon, a video editor with an eye for storytelling and
+                visual detail. I turn raw footage into finished edits, from
+                corporate videos to creative content.
+              </p>
+              <p>
+                I combine the technical side of editing with a feel for the
+                story. To me, great editing serves the footage, the audience,
+                and the moment.
+              </p>
+              <button className="text-link" onClick={() => openVideo(intro)}>
+                A little more about me <Arrow />
+              </button>
+            </div>
+          </div>
+        </section>
+        <section id="toolkit" className="toolkit-section">
+          <div className="section-top eyebrow">
+            <span>04 / THE TOOLKIT</span>
+            <span>FROM FIRST CUT TO FINAL EXPORT</span>
+          </div>
+          <h2 data-reveal="type">
+            IN THE <span>EDIT.</span>
+          </h2>
+          <div className="tool-list">
+            {skills.map(([name, detail, stage], index) => (
+              <details className="tool-item" key={name} data-reveal="slide">
+                <summary className="tool-row">
+                  <span className="eyebrow">
+                    0{index + 1} / {stage}
+                  </span>
+                  <h3>{name}</h3>
+                  <span className="tool-symbol" aria-hidden="true">
+                    +
+                  </span>
+                </summary>
+                <p className="tool-detail">{detail}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+        <section id="contact" className="contact-section">
+          <div className="section-top eyebrow">
+            <span>05 / YOUR NEXT PROJECT</span>
+            <span>END OF SEQUENCE. START OF SOMETHING ELSE.</span>
+          </div>
+          <a
+            className="contact-title"
+            href="mailto:shannonkeanu1@gmail.com"
+            data-reveal="type"
+          >
+            LET'S
+            <br />
+            <span>MAKE</span> THE CUT.
+            <Arrow />
+          </a>
+          <div className="contact-bottom">
+            <p>
+              Got footage? A brief? An idea?
+              <br />
+              Let's talk about the edit.
+            </p>
+            <a href="mailto:shannonkeanu1@gmail.com">
+              shannonkeanu1@gmail.com <Arrow />
+            </a>
+          </div>
+        </section>
+      </main>
+      <footer>
+        <a href="#home" className="wordmark">
+          SHANNON
+          <span className="logo-play">
+            <Play />
+          </span>
+        </a>
+        <span>© {new Date().getFullYear()} Shannon. Made to be watched.</span>
+        <button
+          className="motion-toggle"
+          aria-pressed={motion}
+          onClick={() => setMotion(!motion)}
+        >
+          Motion {motion ? "on" : "off"}{" "}
+          <span aria-hidden="true">{motion ? "◉" : "○"}</span>
+        </button>
+        <a href="#home">Back to top ↑</a>
+      </footer>
+      {video && <VideoPlayer video={video} onClose={closeVideo} />}
+    </div>
+  );
+}
