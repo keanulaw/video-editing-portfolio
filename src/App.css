@@ -1639,3 +1639,15 @@ html:has(.motion-off) {
     align-items: flex-start;
   }
 }
+
+/* Landscape videos in the color section get a landscape frame instead of
+   being letterboxed inside the portrait one. */
+.color-films .video-trigger:has(.project-image[data-orientation="landscape"]) {
+  aspect-ratio: 16/9;
+  align-self: start;
+}
+.color-films
+  .video-trigger:has(.project-image[data-orientation="landscape"])
+  img {
+  object-fit: cover;
+}
