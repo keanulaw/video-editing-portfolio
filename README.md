@@ -1,6 +1,6 @@
 # Shannon — Video editing portfolio
 
-React + Vite portfolio with an editorial, film-inspired design. Native CSS and IntersectionObserver handle motion; no animation library or scroll hijacking.
+React + Vite portfolio designed like an editing workspace: the hero is a viewer and a timeline with each video as a clip on its track (short form, long form, color grading). Selecting a clip previews it; the playhead moves to it. Native CSS only; no animation library or scroll hijacking.
 
 ## Run
 
@@ -28,16 +28,16 @@ The email is Shannon's verified address from the completed developer portfolio. 
 - Players are mounted only after a click. No video or sound autoplays, and closing a player removes it.
 - Native modal dialogs support Escape, focus containment, restored trigger focus, fullscreen playback, and a direct source link if an external player is unavailable.
 - Drive/YouTube playback still depends on the owner's sharing settings and those external services. One original Drive player returned a provider loading error during inspection; no bypass or alternate stream is used.
-- Reduced-motion preferences default to a static layout. Visitors can explicitly toggle motion in the footer; the choice lasts for this page session.
+- The playhead sweep is the only automatic motion and is disabled for visitors who prefer reduced motion.
+- On small screens the timeline scrolls sideways inside its panel; the page itself never scrolls horizontally.
 - The mobile menu, project buttons, toolkit disclosures, and dialogs are keyboard accessible. Native page scrolling remains available throughout.
 
 ## Design files
 
-- `src/App.jsx`: page sections and interaction state
+- `src/App.jsx`: page sections, the viewer/timeline, and interaction state
 - `src/App.css`: responsive layouts, transitions, and motion treatment
-- `src/hooks/useSequence.js`: reveal observer and frame-scheduled scroll effects
 - `src/components/VideoPlayer.jsx`: on-demand embedded player
 - `src/components/ProjectImage.jsx`: responsive remote thumbnails and fallback
-- `public/fonts/`: self-hosted Inter with its license
+- Typeface: Archivo (variable weight and width), bundled from `@fontsource-variable/archivo`
 
-Compatible dependency maintenance updates are recorded in the lockfile. No new production dependencies were added.
+The only production dependency added is the Archivo font package.

@@ -7,48 +7,145 @@ import {
   email,
   mailtoLink,
 } from "./data/content";
-import { useSequence } from "./hooks/useSequence";
 import ProjectImage from "./components/ProjectImage";
 import VideoPlayer from "./components/VideoPlayer";
 import "./App.css";
 
-const Arrow = () => (
-  <span className="arrow" aria-hidden="true">
-    ↗
-  </span>
-);
-const Play = () => <span aria-hidden="true">▶</span>;
+const tracks = [
+  { id: "V1", name: "Short form", tone: "short", width: 15, gap: 6 },
+  { id: "V2", name: "Long form", tone: "long", width: 20, gap: 3 },
+  { id: "C1", name: "Color grading", tone: "color", width: 24, gap: 14 },
+];
 
-function WorkFrame({ project, onPlay, className = "" }) {
+const work = [...projects, ...colorGrades];
+const trackOf = (project) =>
+  project.category === "Short Form"
+    ? tracks[0]
+    : project.category === "Long Form"
+      ? tracks[1]
+      : tracks[2];
+
+// Lay each track's clips end to end, offset so the tracks overlap like a real
+// edit instead of starting in one column.
+const clips = tracks.flatMap((track, row) => {
+  let start = [2, 6, 20][row];
+  return work
+    .filter((project) => trackOf(project) === track)
+    .map((project) => {
+      const clip = { project, track, start, width: track.width };
+      start += track.width + track.gap;
+      return clip;
+    });
+});
+
+// The ruler spans a five-minute sequence at 25 fps.
+const timecode = (position) => {
+  const frames = Math.round((position / 100) * 300 * 25);
+  const pad = (value) => String(value).padStart(2, "0");
+  return [
+    0,
+    Math.floor(frames / 1500),
+    Math.floor(frames / 25) % 60,
+    frames % 25,
+  ]
+    .map(pad)
+    .join(":");
+};
+
+const groups = tracks.map((track) => ({
+  track,
+  items: work.filter((project) => trackOf(project) === track),
+}));
+
+function Timeline({ selected, onSelect, onPlay }) {
+  const current = clips.find((clip) => clip.project.id === selected.id);
+  const [playhead, setPlayhead] = useState(0);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setPlayhead(current.start));
+    return () => cancelAnimationFrame(frame);
+  }, [current.start]);
   return (
-    <article className={`work-frame ${className}`} data-reveal="frame">
-      <button
-        className="video-trigger"
-        onClick={() => onPlay(project)}
-        aria-label={`Watch ${project.title}`}
-      >
-        <ProjectImage project={project} />
-        <span className="frame-corners" aria-hidden="true" />
-        <span className="frame-number">CUT / 0{project.id}</span>
-        <span className="play-disc">
-          <Play />
-          <span>PLAY</span>
-        </span>
-        <span className="frame-bottom">
-          <span>{project.category}</span>
-          <span>WATCH THE CUT ↗</span>
-        </span>
-      </button>
-      <div className="work-caption">
-        <h3>{project.title}</h3>
-        <p>{project.description}</p>
+    <section className="editor" aria-label="Featured work">
+      <div className="viewer">
+        <button
+          className="viewer-frame"
+          onClick={() => onPlay(selected)}
+          aria-label={`Play ${selected.title}`}
+        >
+          <ProjectImage key={selected.id} project={selected} eager />
+          <span className="viewer-play" aria-hidden="true">
+            ▶
+          </span>
+        </button>
+        <div className="viewer-info">
+          <span className={`tag tone-${trackOf(selected).tone}`}>
+            {selected.category}
+          </span>
+          <h2>{selected.title}</h2>
+          <p>{selected.description}</p>
+          <button className="button" onClick={() => onPlay(selected)}>
+            Play video
+          </button>
+        </div>
       </div>
-    </article>
+      <div className="timeline">
+        <div className="timeline-scroll">
+          <div className="timeline-canvas">
+            <div className="ruler" aria-hidden="true">
+              <span className="timecode">{timecode(playhead)}</span>
+              <span className="ruler-scale">
+                {Array.from({ length: 11 }, (_, index) => (
+                  <span
+                    key={index}
+                    className="tick"
+                    style={{ left: `${index * 10}%` }}
+                  />
+                ))}
+              </span>
+            </div>
+            {tracks.map((track) => (
+              <div className="track" key={track.id}>
+                <span className="track-name">
+                  <b>{track.id}</b>
+                  {track.name}
+                </span>
+                <div className="track-lane">
+                  {clips
+                    .filter((clip) => clip.track === track)
+                    .map(({ project, start, width }) => (
+                      <button
+                        key={project.id}
+                        className={`clip tone-${track.tone}`}
+                        style={{ left: `${start}%`, width: `${width}%` }}
+                        aria-pressed={project.id === selected.id}
+                        onClick={() => onSelect(project)}
+                        onDoubleClick={() => onPlay(project)}
+                      >
+                        {project.title}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            ))}
+            <span className="playhead-lane" aria-hidden="true">
+              <span className="playhead" style={{ left: `${playhead}%` }} />
+            </span>
+          </div>
+        </div>
+        <p className="timeline-hint">
+          Pick a clip to preview it. Double-click it, or press Play video, to
+          watch.
+        </p>
+      </div>
+    </section>
   );
 }
 
 export default function App() {
   const [video, setVideo] = useState(null);
+  const [selected, setSelected] = useState(projects[2]);
+  const [copied, setCopied] = useState(false);
+  const [menu, setMenu] = useState(false);
   const videoTrigger = useRef(null);
   const openVideo = (project) => {
     videoTrigger.current = document.activeElement;
@@ -58,7 +155,11 @@ export default function App() {
     setVideo(null);
     requestAnimationFrame(() => videoTrigger.current?.focus());
   };
-  const [copied, setCopied] = useState(false);
+  const stepVideo = (step) => {
+    const index = work.findIndex((item) => item.id === video?.id);
+    if (index === -1) return;
+    setVideo(work[(index + step + work.length) % work.length]);
+  };
   const copyEmail = async () => {
     try {
       await navigator.clipboard.writeText(email);
@@ -68,38 +169,6 @@ export default function App() {
       location.href = `mailto:${email}`;
     }
   };
-  const playlist = [...projects, ...colorGrades];
-  const stepVideo = (step) => {
-    const index = playlist.findIndex((item) => item.id === video?.id);
-    if (index === -1) return;
-    setVideo(playlist[(index + step + playlist.length) % playlist.length]);
-  };
-  const [menu, setMenu] = useState(false);
-  const [motion, setMotion] = useState(
-    () => !matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
-  const [active, setActive] = useState("home");
-  useSequence(motion);
-  useEffect(() => {
-    const query = matchMedia("(prefers-reduced-motion: reduce)");
-    const change = () => setMotion(!query.matches);
-    query.addEventListener("change", change);
-    return () => query.removeEventListener("change", change);
-  }, []);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setActive(entry.target.id);
-        });
-      },
-      { rootMargin: "-15% 0px -65% 0px" },
-    );
-    document
-      .querySelectorAll("main > section[id]")
-      .forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
-  }, []);
   useEffect(() => {
     const escape = (event) => {
       if (event.key === "Escape") setMenu(false);
@@ -108,20 +177,14 @@ export default function App() {
     return () => removeEventListener("keydown", escape);
   }, []);
   return (
-    <div className={`site ${motion ? "motion-on" : "motion-off"}`}>
+    <div className="site">
       <a className="skip-link" href="#work">
         Skip to the work
       </a>
-      <header className="navigation">
-        <a href="#home" className="wordmark" aria-label="Shannon, home">
-          SHANNON
-          <span className="logo-play">
-            <Play />
-          </span>
-        </a>
-        <span className="nav-label">INDEPENDENT VIDEO EDITOR</span>
-        <a className="nav-cta" href="#contact">
-          Start a project
+      <header className="topbar">
+        <a href="#top" className="wordmark">
+          <span className="wordmark-mark" aria-hidden="true" />
+          Shannon
         </a>
         <button
           className="menu-toggle"
@@ -129,372 +192,139 @@ export default function App() {
           aria-controls="main-nav"
           onClick={() => setMenu(!menu)}
         >
-          {menu ? "Close −" : "Menu +"}
+          {menu ? "Close" : "Menu"}
         </button>
         <nav
           id="main-nav"
           aria-label="Main navigation"
           className={menu ? "is-open" : ""}
         >
-          {["work", "about", "toolkit", "contact"].map((item) => (
-            <a
-              key={item}
-              href={`#${item}`}
-              aria-current={active === item ? "location" : undefined}
-              onClick={() => setMenu(false)}
-            >
-              {item}
-              <span aria-hidden="true">↗</span>
+          {[
+            ["work", "Work"],
+            ["about", "About"],
+            ["contact", "Contact"],
+          ].map(([id, label]) => (
+            <a key={id} href={`#${id}`} onClick={() => setMenu(false)}>
+              {label}
             </a>
           ))}
+          <a className="button" href={mailtoLink}>
+            Email me
+          </a>
         </nav>
-        <div className="reading-progress" aria-hidden="true" />
       </header>
-      <main>
-        <section id="home" className="hero">
-          <div className="hero-top eyebrow">
-            <span>SHORT FORM / LONG FORM / MOTION GRAPHICS / COLOR</span>
-            <span>PORTFOLIO — PRESS PLAY</span>
-          </div>
-          <h1>
-            <span className="hero-name">
-              SHANNON
-              <span className="asterisk" aria-hidden="true">
-                ✳
-              </span>
-            </span>
-            <span className="hero-role">
-              VIDEO EDITOR<span className="period">.</span>
-            </span>
-          </h1>
-          <div className="hero-lower">
-            <p>
-              Edits for every kind of story,
-              <br />
-              from social clips to cinematic cuts.
-            </p>
-            <a className="round-link" href="#work">
-              <span>
-                Explore
-                <br />
-                the work
-              </span>
-              <span aria-hidden="true">↓</span>
-            </a>
-            <p className="hero-note">
-              Editing, motion graphics, sound design
-              <br />
-              and color, all in one editor.
-            </p>
-            <div className="hero-actions">
-              <a className="cta-button" href={mailtoLink}>
-                Email me about your project
-              </a>
-              <a className="cta-secondary" href="#work">
-                Watch the work
-              </a>
-            </div>
-          </div>
-          <div className="hero-film" aria-label="A few cuts from the portfolio">
-            {[projects[0], projects[2], projects[4]].map((project, index) => (
-              <button
-                key={project.id}
-                onClick={() => openVideo(project)}
-                className={`film-shot shot-${index}`}
-                aria-label={`Watch ${project.title}`}
-              >
-                <ProjectImage project={project} eager width={800} />
-                <span>
-                  <span>
-                    0{index + 1} / {project.title}
-                  </span>
-                  <Play />
-                </span>
-              </button>
-            ))}
-            <span className="film-label eyebrow">
-              A FEW FRAMES.
-              <br />A LOT OF POSSIBILITIES.
-            </span>
-          </div>
-          <div className="hero-footer eyebrow">
-            <span>
-              <span className="red-dot" /> EDIT. REFINE. REPEAT.
-            </span>
-            <span>SCROLL TO START THE SEQUENCE ↓</span>
-            <span>01 — 05</span>
-          </div>
+      <main id="top">
+        <section className="hero">
+          <h1>I edit short‑form, long‑form, motion graphics and color.</h1>
+          <p className="hero-sub">
+            I'm Shannon, a video editor with 1–2 years of experience. I take
+            raw footage all the way to a delivered video: the cut, the sound,
+            the graphics and the grade.
+          </p>
+          <Timeline
+            selected={selected}
+            onSelect={setSelected}
+            onPlay={openVideo}
+          />
         </section>
-        <section id="work" className="work-section">
-          <div className="section-top eyebrow">
-            <span>01 / SELECTED WORK</span>
-            <span>
-              {projects.length + colorGrades.length} CUTS. DIFFERENT MOODS.
+
+        <section id="work" className="work" aria-labelledby="work-title">
+          <h2 id="work-title" className="section-title">
+            All work
+          </h2>
+          {groups.map(({ track, items }) => (
+            <div className="bin" key={track.id}>
+              <h3 className={`bin-title tone-${track.tone}`}>
+                {track.name}
+                <span>{items.length}</span>
+              </h3>
+              <div className={`bin-grid bin-${track.tone}`}>
+                {items.map((project) => (
+                  <article className="card" key={project.id}>
+                    <button
+                      className={`card-frame tone-${track.tone}`}
+                      onClick={() => openVideo(project)}
+                      aria-label={`Play ${project.title}`}
+                    >
+                      <ProjectImage project={project} width={700} />
+                      <span className="card-play" aria-hidden="true">
+                        ▶
+                      </span>
+                    </button>
+                    <h4>{project.title}</h4>
+                    <p>{project.description}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+
+        <section id="about" className="about" aria-labelledby="about-title">
+          <button
+            className="about-video"
+            onClick={() => openVideo(intro)}
+            aria-label="Play Meet Shannon, a video introduction"
+          >
+            <ProjectImage project={intro} />
+            <span className="card-play" aria-hidden="true">
+              ▶
             </span>
-          </div>
-          <div className="section-heading" data-reveal="type">
-            <h2>
-              LESS TALK.
-              <br />
-              <span>MORE PLAY.</span>
+          </button>
+          <div className="about-copy">
+            <h2 id="about-title" className="section-title">
+              About me
             </h2>
             <p>
-              Short-form, long-form, and everything
-              <br className="desktop-break" /> that makes the edit click.
+              I'm a video editor with an eye for storytelling and visual
+              detail. I've cut brand intros, comedy and serious shorts,
+              voice-over explainers, talking-head videos and gaming content.
             </p>
-          </div>
-          <WorkFrame
-            project={projects[2]}
-            onPlay={openVideo}
-            className="featured-frame"
-          />
-          <div className="shorts-heading" data-reveal="slide">
-            <span className="eyebrow">THE SHORT CUTS</span>
-            <h3>
-              Same format.
-              <br />
-              Different energy.
-            </h3>
-            <span className="giant-arrow" aria-hidden="true">
-              ↘
-            </span>
-          </div>
-          <div className="shorts-pair">
-            <WorkFrame
-              project={projects[0]}
-              onPlay={openVideo}
-              className="portrait-frame"
-            />
-            <WorkFrame
-              project={projects[1]}
-              onPlay={openVideo}
-              className="portrait-frame offset-frame"
-            />
-          </div>
-          <div className="longs-heading eyebrow">
-            <span>LET IT PLAY A LITTLE LONGER</span>
-            <span>LONG FORM ↓</span>
-          </div>
-          <div className="longs-pair">
-            <WorkFrame project={projects[3]} onPlay={openVideo} />
-            <WorkFrame
-              project={projects[4]}
-              onPlay={openVideo}
-              className="offset-frame"
-            />
-          </div>
-          <section
-            id="color-grading"
-            className="color-study"
-            aria-labelledby="color-title"
-          >
-            <div className="section-top eyebrow">
-              <span>IN FOCUS / COLOR GRADING</span>
-              <span>TWO FILMS. MY COLOR WORK.</span>
-            </div>
-            <div className="color-heading" data-reveal="type">
-              <h3 id="color-title">
-                A FEEL
-                <br />
-                FOR <em>COLOR.</em>
-              </h3>
-              <p>
-                Two examples of my color grading work.
-                <br />
-                Watch each film to see the finished look.
-              </p>
-            </div>
-            <div className="color-films">
-              {colorGrades.map((project) => (
-                <WorkFrame
-                  key={project.id}
-                  project={project}
-                  onPlay={openVideo}
-                />
+            <p>
+              Good editing serves the footage, the audience and the moment.
+              Sometimes that means more energy; often it just means the right
+              beat.
+            </p>
+            <button className="text-link" onClick={() => openVideo(intro)}>
+              Watch my video introduction
+            </button>
+            <dl className="skills">
+              {skills.map(([name, detail]) => (
+                <div key={name}>
+                  <dt>{name}</dt>
+                  <dd>{detail}</dd>
+                </div>
               ))}
-            </div>
-          </section>
-          <div className="more-work">
-            <h3 data-reveal="type">
-              STILL ROLLING<span>↙</span>
-            </h3>
-            {projects.slice(5).map((project) => (
-              <button
-                key={project.id}
-                onClick={() => openVideo(project)}
-                className="project-row"
-                data-reveal="slide"
-              >
-                <span className="eyebrow">0{project.id}</span>
-                <ProjectImage project={project} width={400} />
-                <span className="row-title">
-                  {project.title}
-                  <small>{project.category}</small>
-                </span>
-                <span className="row-watch">
-                  Watch <Arrow />
-                </span>
-              </button>
-            ))}
+            </dl>
           </div>
         </section>
+
         <section
-          className="motion-section"
-          aria-label="Motion graphics interlude"
+          id="contact"
+          className="contact"
+          aria-labelledby="contact-title"
         >
-          <div className="eyebrow">
-            <span>02 / A LITTLE MOTION</span>
-            <span>TYPE. TIMING. RHYTHM.</span>
-          </div>
-          <div className="kinetic-type" data-reveal="kinetic">
-            <span>MAKE</span>
-            <span className="outlined">
-              IT MOVE
-              <span className="motion-star" aria-hidden="true">
-                ✳
-              </span>
-            </span>
-            <span>
-              MAKE IT <em>FEEL.</em>
-            </span>
-          </div>
-          <div className="motion-bottom">
-            <span className="eyebrow">
-              MOTION GRAPHICS / SOUND DESIGN / COLOR
-            </span>
-            <p>
-              Not every frame needs more.
-              <br />
-              Sometimes it just needs the right beat.
-            </p>
-          </div>
-        </section>
-        <section id="about" className="about-section">
-          <div className="section-top eyebrow">
-            <span>03 / BEHIND THE CUT</span>
-            <span>HELLO, I'M SHANNON.</span>
-          </div>
-          <div className="about-layout">
-            <div className="about-visual" data-reveal="frame">
-              <button
-                onClick={() => openVideo(intro)}
-                aria-label="Watch Meet Shannon, video introduction"
-              >
-                <ProjectImage project={intro} />
-                <span className="intro-sticker">
-                  MEET THE
-                  <br />
-                  EDITOR <Arrow />
-                </span>
-                <span className="play-disc">
-                  <Play />
-                </span>
-              </button>
-              <span className="eyebrow">
-                A PERSONAL INTRODUCTION — WATCH WITH SOUND
-              </span>
-            </div>
-            <div className="about-copy" data-reveal="slide">
-              <h2>
-                BEHIND
-                <br />
-                THE
-                <br />
-                <span>TIMELINE.</span>
-              </h2>
-              <p>
-                I'm Shannon, a video editor with an eye for storytelling and
-                visual detail. I turn raw footage into finished edits, from
-                corporate videos to creative content.
-              </p>
-              <p>
-                I combine the technical side of editing with a feel for the
-                story. To me, great editing serves the footage, the audience,
-                and the moment.
-              </p>
-              <button className="text-link" onClick={() => openVideo(intro)}>
-                A little more about me <Arrow />
-              </button>
-            </div>
-          </div>
-        </section>
-        <section id="toolkit" className="toolkit-section">
-          <div className="section-top eyebrow">
-            <span>04 / THE TOOLKIT</span>
-            <span>FROM FIRST CUT TO FINAL EXPORT</span>
-          </div>
-          <h2 data-reveal="type">
-            IN THE <span>EDIT.</span>
-          </h2>
-          <div className="tool-list">
-            {skills.map(([name, detail, stage], index) => (
-              <details className="tool-item" key={name} data-reveal="slide">
-                <summary className="tool-row">
-                  <span className="eyebrow">
-                    0{index + 1} / {stage}
-                  </span>
-                  <h3>{name}</h3>
-                  <span className="tool-symbol" aria-hidden="true">
-                    +
-                  </span>
-                </summary>
-                <p className="tool-detail">{detail}</p>
-              </details>
-            ))}
-          </div>
-        </section>
-        <section id="contact" className="contact-section">
-          <div className="section-top eyebrow">
-            <span>05 / YOUR NEXT PROJECT</span>
-            <span>END OF SEQUENCE. START OF SOMETHING ELSE.</span>
-          </div>
-          <a
-            className="contact-title"
-            href={mailtoLink}
-            data-reveal="type"
-          >
-            LET'S
-            <br />
-            <span>MAKE</span> THE CUT.
-            <Arrow />
-          </a>
-          <div className="contact-bottom">
-            <p>
-              Got footage? A brief? An idea?
-              <br />
-              Tell me the video type, length and deadline.
-              <br />
-              I reply by email, usually within 1–2 days.
-            </p>
-            <div className="contact-actions">
-              <a className="cta-button" href={mailtoLink}>
-                Send a project brief <Arrow />
-              </a>
-              <a href={`mailto:${email}`}>{email}</a>
-              <button type="button" className="copy-email" onClick={copyEmail}>
-                {copied ? "Copied ✓" : "Copy email"}
-              </button>
-            </div>
+          <h2 id="contact-title">Got footage? Let's make the cut.</h2>
+          <p>
+            Tell me the video type, length and deadline, and send a link to the
+            footage if you have it. I reply by email, usually within 1–2 days.
+          </p>
+          <div className="contact-actions">
+            <a className="button button-large" href={mailtoLink}>
+              Send a project brief
+            </a>
+            <a className="contact-email" href={`mailto:${email}`}>
+              {email}
+            </a>
+            <button type="button" className="ghost" onClick={copyEmail}>
+              {copied ? "Copied" : "Copy email"}
+            </button>
           </div>
         </section>
       </main>
       <footer>
-        <a href="#home" className="wordmark">
-          SHANNON
-          <span className="logo-play">
-            <Play />
-          </span>
-        </a>
-        <span>© {new Date().getFullYear()} Shannon. Made to be watched.</span>
-        <button
-          className="motion-toggle"
-          aria-pressed={motion}
-          onClick={() => setMotion(!motion)}
-        >
-          Motion {motion ? "on" : "off"}{" "}
-          <span aria-hidden="true">{motion ? "◉" : "○"}</span>
-        </button>
-        <a href="#home">Back to top ↑</a>
+        <span>© {new Date().getFullYear()} Shannon</span>
+        <a href="#top">Back to top</a>
       </footer>
       {video && (
         <VideoPlayer
