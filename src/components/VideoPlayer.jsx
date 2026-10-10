@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { videoLink } from "../data/content";
 
-export default function VideoPlayer({ video, onClose }) {
+export default function VideoPlayer({ video, onClose, onStep }) {
   const dialog = useRef(null);
   useEffect(() => {
     const element = dialog.current;
@@ -55,6 +55,16 @@ export default function VideoPlayer({ video, onClose }) {
             Open on {video.type === "youtube" ? "YouTube" : "Google Drive"} ↗
           </a>
         </div>
+        {onStep && (
+          <div className="player-steps">
+            <button type="button" onClick={() => onStep(-1)}>
+              ← Previous
+            </button>
+            <button type="button" onClick={() => onStep(1)}>
+              Next →
+            </button>
+          </div>
+        )}
         <p className="player-note">
           If the player is unavailable, use the direct link above.
         </p>
