@@ -314,6 +314,29 @@ export default function App() {
               ))}
             </div>
           </section>
+          <div className="more-work">
+            <h3 data-reveal="type">
+              STILL ROLLING<span>↙</span>
+            </h3>
+            {projects.slice(5).map((project) => (
+              <button
+                key={project.id}
+                onClick={() => openVideo(project)}
+                className="project-row"
+                data-reveal="slide"
+              >
+                <span className="eyebrow">0{project.id}</span>
+                <ProjectImage project={project} width={400} />
+                <span className="row-title">
+                  {project.title}
+                  <small>{project.category}</small>
+                </span>
+                <span className="row-watch">
+                  Watch <Arrow />
+                </span>
+              </button>
+            ))}
+          </div>
         </section>
         <section
           className="motion-section"

@@ -39,6 +39,22 @@ export const projects = [
     videoId: "n-OAW9e92Sw",
     description: "Gaming footage, commentary, and a dynamic edit.",
   },
+  {
+    id: "6",
+    title: "Brand Intro Edit",
+    category: "Short Form",
+    type: "drive",
+    videoId: "14cdbqfqleEVvzklJszjq7cEJsYtHKTnv",
+    description: "An intro edit made for a brand.",
+  },
+  {
+    id: "7",
+    title: "Best VPN Video",
+    category: "Long Form",
+    type: "drive",
+    videoId: "1V5FiJ0zjH20OIRpA7NmzqZRfeM7V0aMG",
+    description: "An edit for a \"what's the best VPN\" video.",
+  },
 ];
 export const intro = {
   id: "intro",
@@ -63,22 +79,6 @@ export const colorGrades = [
     category: "Color Grading",
     type: "drive",
     videoId: "1n26EaiNhUN-AZ2amPj88i6WcOtL20z9E",
-    description: "Color grading sample.",
-  },
-  {
-    id: "6",
-    title: "Color Grading Sample 1",
-    category: "Color Grading",
-    type: "drive",
-    videoId: "14cdbqfqleEVvzklJszjq7cEJsYtHKTnv",
-    description: "Color grading sample.",
-  },
-  {
-    id: "7",
-    title: "Color Grading Sample 2",
-    category: "Color Grading",
-    type: "drive",
-    videoId: "1V5FiJ0zjH20OIRpA7NmzqZRfeM7V0aMG",
     description: "Color grading sample.",
   },
 ];
