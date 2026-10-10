@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { projects, colorGrades, intro, skills } from "./data/content";
+import {
+  projects,
+  colorGrades,
+  intro,
+  skills,
+  email,
+  mailtoLink,
+} from "./data/content";
 import { useSequence } from "./hooks/useSequence";
 import ProjectImage from "./components/ProjectImage";
 import VideoPlayer from "./components/VideoPlayer";
@@ -51,6 +58,22 @@ export default function App() {
     setVideo(null);
     requestAnimationFrame(() => videoTrigger.current?.focus());
   };
+  const [copied, setCopied] = useState(false);
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      location.href = `mailto:${email}`;
+    }
+  };
+  const playlist = [...projects, ...colorGrades];
+  const stepVideo = (step) => {
+    const index = playlist.findIndex((item) => item.id === video?.id);
+    if (index === -1) return;
+    setVideo(playlist[(index + step + playlist.length) % playlist.length]);
+  };
   const [menu, setMenu] = useState(false);
   const [motion, setMotion] = useState(
     () => !matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -97,6 +120,9 @@ export default function App() {
           </span>
         </a>
         <span className="nav-label">INDEPENDENT VIDEO EDITOR</span>
+        <a className="nav-cta" href="#contact">
+          Start a project
+        </a>
         <button
           className="menu-toggle"
           aria-expanded={menu}
@@ -127,7 +153,7 @@ export default function App() {
       <main>
         <section id="home" className="hero">
           <div className="hero-top eyebrow">
-            <span>SHORT FORM / LONG FORM / MOTION GRAPHICS</span>
+            <span>SHORT FORM / LONG FORM / MOTION GRAPHICS / COLOR</span>
             <span>PORTFOLIO — PRESS PLAY</span>
           </div>
           <h1>
@@ -143,9 +169,9 @@ export default function App() {
           </h1>
           <div className="hero-lower">
             <p>
-              The right cut.
+              Edits for every kind of story,
               <br />
-              The right feeling.
+              from social clips to cinematic cuts.
             </p>
             <a className="round-link" href="#work">
               <span>
@@ -156,9 +182,18 @@ export default function App() {
               <span aria-hidden="true">↓</span>
             </a>
             <p className="hero-note">
-              From a quick laugh to a longer story.
-              <br />I edit for the moment that matters.
+              Editing, motion graphics, sound design
+              <br />
+              and color, all in one editor.
             </p>
+            <div className="hero-actions">
+              <a className="cta-button" href={mailtoLink}>
+                Email me about your project
+              </a>
+              <a className="cta-secondary" href="#work">
+                Watch the work
+              </a>
+            </div>
           </div>
           <div className="hero-film" aria-label="A few cuts from the portfolio">
             {[projects[0], projects[2], projects[4]].map((project, index) => (
@@ -279,29 +314,6 @@ export default function App() {
               ))}
             </div>
           </section>
-          <div className="more-work">
-            <h3 data-reveal="type">
-              STILL ROLLING<span>↙</span>
-            </h3>
-            {projects.slice(5).map((project) => (
-              <button
-                key={project.id}
-                onClick={() => openVideo(project)}
-                className="project-row"
-                data-reveal="slide"
-              >
-                <span className="eyebrow">0{project.id}</span>
-                <ProjectImage project={project} width={400} />
-                <span className="row-title">
-                  {project.title}
-                  <small>{project.category}</small>
-                </span>
-                <span className="row-watch">
-                  Watch <Arrow />
-                </span>
-              </button>
-            ))}
-          </div>
         </section>
         <section
           className="motion-section"
@@ -415,7 +427,7 @@ export default function App() {
           </div>
           <a
             className="contact-title"
-            href="mailto:shannonkeanu1@gmail.com"
+            href={mailtoLink}
             data-reveal="type"
           >
             LET'S
@@ -427,11 +439,19 @@ export default function App() {
             <p>
               Got footage? A brief? An idea?
               <br />
-              Let's talk about the edit.
+              Tell me the video type, length and deadline.
+              <br />
+              I reply by email, usually within 1–2 days.
             </p>
-            <a href="mailto:shannonkeanu1@gmail.com">
-              shannonkeanu1@gmail.com <Arrow />
-            </a>
+            <div className="contact-actions">
+              <a className="cta-button" href={mailtoLink}>
+                Send a project brief <Arrow />
+              </a>
+              <a href={`mailto:${email}`}>{email}</a>
+              <button type="button" className="copy-email" onClick={copyEmail}>
+                {copied ? "Copied ✓" : "Copy email"}
+              </button>
+            </div>
           </div>
         </section>
       </main>
@@ -453,7 +473,14 @@ export default function App() {
         </button>
         <a href="#home">Back to top ↑</a>
       </footer>
-      {video && <VideoPlayer video={video} onClose={closeVideo} />}
+      {video && (
+        <VideoPlayer
+          key={video.id}
+          video={video}
+          onClose={closeVideo}
+          onStep={video.id === intro.id ? undefined : stepVideo}
+        />
+      )}
     </div>
   );
 }
