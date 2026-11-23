@@ -1,23 +1,124 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#efeee7" />
-    <meta
-      name="description"
-      content="Shannon, independent video editor. Short-form, long-form, motion graphics and color grading. Email to start a project."
-    />
-    <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Shannon — Video Editor" />
-    <meta property="og:description" content="Video editor for short-form, long-form, motion graphics and color grading. Watch the work and get in touch." />
-    <meta name="twitter:card" content="summary" />
-    <title>Shannon — Video Editor</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shannon — Video Editor</title>
+<meta name="description" content="Shannon, video editor for ads, talking-head content, short-form and long-form video, motion graphics and color grading." />
+<meta name="theme-color" content="#efeee7" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Shannon — Video Editor" />
+<meta property="og:description" content="Ads, talking-head content, short-form and long-form edits, motion graphics and color. Watch the work and get in touch." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<a class="skip" href="#work">Skip to the work</a>
+
+<header class="nav" id="top">
+  <a class="brand" href="#top" aria-label="Shannon, back to top">SHANNON<span class="ast">✳</span></a>
+  <nav aria-label="Main">
+    <a href="#work">Work</a>
+    <a href="#about">About</a>
+    <a href="#toolkit">Toolkit</a>
+    <a class="btn btn-small" href="#contact">Hire me</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">Video editor · Philippines · Working remotely worldwide</p>
+    <h1>Edits that keep people watching.</h1>
+    <p class="lede">Ads, talking-head content, short-form clips, long-form videos, motion graphics and color grading. Pick a category below and press play.</p>
+    <div class="hero-actions">
+      <a class="btn" href="#work">Watch the work ↓</a>
+      <a class="btn btn-ghost" href="#contact">Start a project</a>
+    </div>
+    <ul class="jump" aria-label="Jump to a category" id="jump"></ul>
+  </section>
+
+  <section id="work" class="work" aria-labelledby="work-title">
+    <div class="section-head">
+      <p class="eyebrow">01 / Selected work</p>
+      <h2 id="work-title"><span id="count"></span> projects. Tap any card to watch.</h2>
+    </div>
+    <div class="filters" role="tablist" aria-label="Filter projects by category" id="filters"></div>
+    <ul class="grid" id="grid"></ul>
+  </section>
+
+  <section id="about" class="about" aria-labelledby="about-title">
+    <div class="about-media">
+      <button class="card-thumb wide" id="intro-btn" aria-label="Play my personal introduction video">
+        <img src="/thumbs/1a-MQb3a0F5JhaVJtQ0q2bmD5Btu7cMWJ.jpg" alt="" loading="lazy" />
+        <span class="play" aria-hidden="true">▶</span>
+      </button>
+      <p class="caption">A personal introduction. Watch with sound.</p>
+    </div>
+    <div>
+      <p class="eyebrow">02 / About</p>
+      <h2 id="about-title">Hello, I'm Shannon.</h2>
+      <p>I'm a video editor with an eye for storytelling and visual detail. I turn raw footage into finished edits, from ads and corporate videos to creator content.</p>
+      <p>I combine the technical side of editing with a feel for the story. To me, great editing serves the footage, the audience and the moment.</p>
+    </div>
+  </section>
+
+  <section id="toolkit" class="toolkit" aria-labelledby="toolkit-title">
+    <p class="eyebrow">03 / Toolkit</p>
+    <h2 id="toolkit-title">From first cut to final export.</h2>
+    <ul class="tools">
+      <li><span>Editing</span>DaVinci Resolve</li>
+      <li><span>Color</span>Color grading</li>
+      <li><span>Motion</span>Motion graphics</li>
+      <li><span>Sound</span>Sound design</li>
+      <li><span>Captions</span>Animated subtitles</li>
+      <li><span>Export</span>Video compression</li>
+    </ul>
+  </section>
+
+  <section id="contact" class="contact" aria-labelledby="contact-title">
+    <p class="eyebrow">04 / Your next project</p>
+    <h2 id="contact-title">Let's make the cut.</h2>
+    <p>Got footage, a brief or an idea? Tell me the video type, length and deadline. I reply by email, usually within 1–2 days.</p>
+    <div class="hero-actions">
+      <a class="btn" href="mailto:shannonkeanu1@gmail.com?subject=Video%20editing%20project%20inquiry&body=Hi%20Shannon%2C%0A%0AProject%20type%20(ad%2C%20talking%20head%2C%20short-form%2C%20long-form%2C%20motion%20graphics%2C%20color%20grading%2C%20other)%3A%0ALength%20%2F%20number%20of%20videos%3A%0ADeadline%3A%0ALink%20to%20footage%20or%20references%3A%0A%0AThanks!">Send a project brief ↗</a>
+      <button class="btn btn-ghost" id="copy-email" type="button">shannonkeanu1@gmail.com · Copy</button>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>© Shannon · Video Editor</span>
+  <a href="#top">Back to top ↑</a>
+</footer>
+
+<div class="player" id="player" role="dialog" aria-modal="true" aria-labelledby="p-title" hidden>
+  <div class="player-inner">
+    <div class="player-bar">
+      <p class="player-count" id="p-count"></p>
+      <button class="icon-btn" id="p-close" type="button" aria-label="Close player">✕</button>
+    </div>
+    <div class="player-body">
+      <div class="frame-wrap" id="p-frame"></div>
+      <div class="player-info">
+        <p class="eyebrow" id="p-tags"></p>
+        <h3 id="p-title"></h3>
+        <p id="p-desc"></p>
+        <div class="versions" id="p-versions"></div>
+        <a class="drive-link" id="p-open" target="_blank" rel="noopener">Open in a new tab ↗</a>
+        <div class="player-nav">
+          <button class="btn btn-ghost" id="p-prev" type="button">← Previous</button>
+          <button class="btn btn-ghost" id="p-next" type="button">Next →</button>
+        </div>
+        <p class="hint">Keyboard: ← → to switch projects, Esc to close.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="/projects.js"></script>
+<script src="/app.js"></script>
+</body>
 </html>
